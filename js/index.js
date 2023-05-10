@@ -1,39 +1,51 @@
 
 const saveBtn = document.querySelector("#save-btn");
 const inputEl = document.querySelector("#input-el");
+const deleteBtn = document.querySelector("#delete-btn");
+const saveTabBtn = document.querySelector("#save-tab-btn");
 const ulEl = document.querySelector("#ul-el");
 
 let myLeads = [];
 
-saveBtn.addEventListener("click", function () { save() });
+saveBtn.addEventListener("click", function () { save(inputEl.value) });
 inputEl.addEventListener("keypress", function (event) { if (event.key == "Enter") { saveBtn.click() } });
+deleteBtn.addEventListener("dblclick", function(){deleteAll()});
+saveTabBtn.addEventListener("click", function(){saveTab()});
 
 pullLeadsFromLocalStorage();
-displayLeads();
+display(myLeads);
 
-function save() {
-    myLeads.push(inputEl.value);
-    localStorage.setItem("leadsKeyValue" + Date.now(),inputEl.value);
+function save(s) {
+    console.log("Saving lead..");
+    myLeads.push(s);
+    localStorage.setItem("lkv", JSON.stringify(myLeads));
     inputEl.value = "";
-    displayLeads()
+    console.log("Lead saved succesfully");
+    display(myLeads);
+    inputEl.focus();
 }
 
-function displayLeads() {
-    if (myLeads.length > 0) {
+function saveTab(){
+    chrome.tabs.query({currentWindow: true, active: true}, function(tabs){
+        save(tabs[0].URL);
+    })
+}
+
+function display(leads) {
+    console.log("Displaying leads..");
+    if (leads.length) {
         ulEl.innerHTML = "";
-        for (let x = 0; x < myLeads.length; x++) {
-            if (myLeads[x].includes("www")) {
+        for (let x = 0; x < leads.length; x++) {
+            if (leads[x].includes("www")) {
                 ulEl.innerHTML +=
                     `<li>
-                <a href=https://${myLeads[x]} target='_blank'>${myLeads[x]}</a>
+                <a href=https://${leads[x]} target='_blank'>${leads[x]}</a>
             </li>`;
             }
             else {
-                ulEl.innerHTML += "<li>" + myLeads[x] + "</li>";
+                ulEl.innerHTML += "<li>" + leads[x] + "</li>";
             }
         }
-        inputEl.focus();
-
         console.log("Leads displayed successfully.");
     }
     else {
@@ -41,14 +53,22 @@ function displayLeads() {
     }
 }
 
-function pullLeadsFromLocalStorage(x) {
+function pullLeadsFromLocalStorage() {
+    if(localStorage.getItem("lkv"))
+    {
+        console.log("Getting all leads..");
+        myLeads = JSON.parse(localStorage.getItem("lkv"));
+        console.log("All leads retrieved successfully");
+    };
+}
 
-        for(let i = 0; i < localStorage.length; i++)
-        {
-            if(localStorage.key(i).includes("leadsKeyValue"))
-            {
-                myLeads.push(localStorage.getItem(localStorage.key(i)));
-            }
-        }
+function deleteAll()
+{
+    console.log("Deleting all leads..");
+    localStorage.clear();
+    ulEl.innerHTML ="";
+    myLeads = [];
+    console.log("All leads have been cleared from local storage!");
+    inputEl.focus();
 }
 
