@@ -10,7 +10,10 @@ let myLeads = [];
 saveBtn.addEventListener("click", function () { save(inputEl.value) });
 inputEl.addEventListener("keypress", function (event) { if (event.key == "Enter") { saveBtn.click() } });
 deleteBtn.addEventListener("dblclick", function(){deleteAll()});
-saveTabBtn.addEventListener("click", function(){saveTab()});
+saveTabBtn.addEventListener("click", function(){
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+    save(tabs[0].url);
+})});
 
 pullLeadsFromLocalStorage();
 display(myLeads);
@@ -23,12 +26,6 @@ function save(s) {
     console.log("Lead saved succesfully");
     display(myLeads);
     inputEl.focus();
-}
-
-function saveTab(){
-    chrome.tabs.query({currentWindow: true, active: true}, function(tabs){
-        save(tabs[0].URL);
-    })
 }
 
 function display(leads) {
@@ -65,7 +62,13 @@ function pullLeadsFromLocalStorage() {
 function deleteAll()
 {
     console.log("Deleting all leads..");
-    localStorage.clear();
+    for(let s in localStorage)
+    {
+        if(s == "lkv")
+        {
+            localStorage.removeItem("lkv");
+        }
+    }
     ulEl.innerHTML ="";
     myLeads = [];
     console.log("All leads have been cleared from local storage!");
